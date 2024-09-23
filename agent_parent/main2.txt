@@ -1,0 +1,391 @@
+import os
+import logging
+import openai
+
+
+def setup_logging():
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler("ai_agent_creator.log"),
+            logging.StreamHandler()
+        ]
+    )
+
+api_key = "2d2d8893395640a89cf366271e1a84fe"  # Your API key
+
+
+class AIAgentCreator:
+    def __init__(self, api_key):
+        setup_logging()
+        self.logger = logging.getLogger(__name__)
+        self.design_module = DesignModule(api_key)
+        self.development_module = DevelopmentModule()
+        self.testing_module = TestingModule()
+        self.iteration_module = IterationModule()
+        self.safety_module = SafetyModule()
+        self.explainability_module = ExplainabilityModule()
+        self.llm_integration_module = LLMIntegrationModule(api_key)
+
+
+
+    def create_agent(self, task_description, max_iterations=5):
+        self.logger.info(f"Starting agent creation for task: {task_description}")
+        
+        if not self.safety_module.check_task_safety(task_description):
+            self.logger.error("Task failed safety check")
+            raise ValueError("Task failed safety check")
+
+        for iteration in range(max_iterations):
+            self.logger.info(f"Iteration {iteration + 1}")
+            
+            agent_design = self.design_module.generate_design(task_description)
+            agent_code = self.development_module.generate_code(agent_design)
+            
+            llm_integrated_code = self.llm_integration_module.integrate_llm(agent_code)
+            
+            test_results = self.testing_module.run_tests(llm_integrated_code)
+            
+            explanation = self.explainability_module.explain_agent(llm_integrated_code, test_results)
+            self.logger.info(f"Agent Explanation: {explanation}")
+
+            if self.iteration_module.is_performance_satisfactory(test_results):
+                self.logger.info("Satisfactory performance achieved")
+                return llm_integrated_code, explanation
+
+            task_description = self.iteration_module.refine_task(task_description, test_results)
+
+        self.logger.warning("Max iterations reached without satisfactory performance")
+        return llm_integrated_code, explanation
+    
+api_key = "2d2d8893395640a89cf366271e1a84fe"
+creator = AIAgentCreator(api_key)
+    # ... (rest of the AIAgentCreator class remains the same)
+
+import openai
+import logging
+
+
+
+
+class DesignModule:
+    def __init__(self, api_key):
+        self.logger = logging.getLogger(__name__)
+        self.client = openai.OpenAI(
+            api_key=api_key,
+            base_url="https://api.aimlapi.com"
+        )
+
+    def generate_design(self, task_description):
+        try:
+            system_content = "You are an AI architecture designer. Design an AI agent architecture for the given task."
+            user_content = f"Task: {task_description}\nInclude details on neural network architecture, input/output specifications, and any necessary preprocessing steps."
+            
+            chat_completion = self.client.chat.completions.create(
+                model="mistralai/Mistral-7B-Instruct-v0.2",
+                messages=[
+                    {"role": "system", "content": system_content},
+                    {"role": "user", "content": user_content},
+                ],
+                temperature=0.7,
+                max_tokens=512,
+            )
+            design = chat_completion.choices[0].message.content
+            self.logger.info("Design generated successfully")
+            return design
+        except Exception as e:
+            self.logger.error(f"Error in design generation: {str(e)}")
+            raise DesignGenerationError("Failed to generate agent design") from e
+
+
+# modules/development_module.py
+import ast
+
+
+class DevelopmentModule:
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+
+    def generate_code(self, agent_design):
+        try:
+            # Parse the agent design to extract key information
+            design_lines = agent_design.split('\n')
+            architecture = next((line for line in design_lines if 'architecture:' in line.lower()), '')
+            input_spec = next((line for line in design_lines if 'input:' in line.lower()), '')
+            output_spec = next((line for line in design_lines if 'output:' in line.lower()), '')
+
+            # Generate code based on the parsed design
+            code = f"""
+import tensorflow as tf
+
+class AIAgent:
+    def __init__(self):
+        self.model = self._build_model()
+
+    def _build_model(self):
+        # {architecture}
+        model = tf.keras.Sequential([
+            tf.keras.layers.Input(shape={self._parse_input_shape(input_spec)}),
+            tf.keras.layers.Dense(64, activation='relu'),
+            tf.keras.layers.Dense(32, activation='relu'),
+            tf.keras.layers.Dense({self._parse_output_shape(output_spec)})
+        ])
+        model.compile(optimizer='adam', loss='mse')
+        return model
+
+    def predict(self, input_data):
+        # {input_spec}
+        # {output_spec}
+        return self.model.predict(input_data)
+
+    @staticmethod
+    def _parse_input_shape(input_spec):
+        # Extract input shape from input specification
+        return (10,)  # Default shape, replace with actual parsing logic
+
+    @staticmethod
+    def _parse_output_shape(output_spec):
+        # Extract output shape from output specification
+        return 1  # Default shape, replace with actual parsing logic
+
+# Additional implementation details based on the design
+"""
+            self.logger.info("Code generated successfully")
+            return code
+        except Exception as e:
+            self.logger.error(f"Error in code generation: {str(e)}")
+            raise CodeGenerationError("Failed to generate agent code") from e
+
+# modules/testing_module.py
+import numpy as np
+
+
+class TestingModule:
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+
+    def run_tests(self, agent_code):
+        try:
+            # In a real-world scenario, we would compile and run the agent code.
+            # For this example, we'll simulate testing with pre-defined metrics.
+            test_results = {
+                "functionality": self._test_functionality(agent_code),
+                "performance": self._test_performance(agent_code),
+                "safety": self._test_safety(agent_code),
+                "llm_integration": self._test_llm_integration(agent_code)
+            }
+            self.logger.info(f"Tests completed. Results: {test_results}")
+            return test_results
+        except Exception as e:
+            self.logger.error(f"Error in testing: {str(e)}")
+            raise TestingError("Failed to run tests on agent") from e
+
+    def _test_functionality(self, agent_code):
+        # Simulate functionality testing
+        return np.random.uniform(0.7, 1.0)
+
+    def _test_performance(self, agent_code):
+        # Simulate performance testing
+        return np.random.uniform(0.6, 1.0)
+
+    def _test_safety(self, agent_code):
+        # Simulate safety testing
+        return np.random.uniform(0.8, 1.0)
+
+    def _test_llm_integration(self, agent_code):
+        # Simulate LLM integration testing
+        return np.random.uniform(0.7, 1.0)
+
+# modules/iteration_module.py
+class IterationModule:
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+
+    def is_performance_satisfactory(self, test_results):
+        thresholds = {
+            "functionality": 0.8,
+            "performance": 0.7,
+            "safety": 0.9,
+            "llm_integration": 0.8
+        }
+        satisfactory = all(test_results[key] > threshold for key, threshold in thresholds.items())
+        self.logger.info(f"Performance satisfactory: {satisfactory}")
+        return satisfactory
+
+    def refine_task(self, task_description, test_results):
+        # In a real-world scenario, this would use more sophisticated techniques to refine the task
+        refined_task = f"{task_description}\nImprovement needed in: "
+        refined_task += ", ".join([k for k, v in test_results.items() if v < 0.8])
+        self.logger.info(f"Task refined: {refined_task}")
+        return refined_task
+
+# modules/safety_module.py
+import re
+
+
+class SafetyModule:
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+        self.unsafe_patterns = [
+            r"\b(hack|malicious|illegal)\b",
+            r"\b(steal|theft|rob)\b",
+            r"\b(weapon|explosive|drug)\b"
+        ]
+
+    def check_task_safety(self, task_description):
+        try:
+            for pattern in self.unsafe_patterns:
+                if re.search(pattern, task_description, re.IGNORECASE):
+                    self.logger.warning(f"Unsafe pattern detected: {pattern}")
+                    return False
+            self.logger.info("Task passed safety check")
+            return True
+        except Exception as e:
+            self.logger.error(f"Error in safety check: {str(e)}")
+            raise SafetyCheckError("Failed to perform safety check") from e
+
+# modules/explainability_module.py
+class ExplainabilityModule:
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+
+    def explain_agent(self, agent_code, test_results):
+        # In a real-world scenario, this would use more sophisticated techniques like SHAP or LIME
+        explanation = f"Agent Explanation:\n"
+        explanation += f"The agent is a neural network with multiple dense layers.\n"
+        explanation += f"Test Results:\n"
+        for key, value in test_results.items():
+            explanation += f"- {key.capitalize()}: {value:.2f}\n"
+        explanation += f"Overall, the agent's performance is "
+        explanation += "satisfactory." if all(v > 0.7 for v in test_results.values()) else "needs improvement."
+        self.logger.info("Generated agent explanation")
+        return explanation
+
+
+
+import openai
+import logging
+
+class LLMIntegrationModule:
+    def __init__(self, api_key):
+        self.logger = logging.getLogger(__name__)
+        self.client = openai.OpenAI(
+            api_key=api_key,
+            base_url="https://api.aimlapi.com"
+        )
+
+    def integrate_llm(self, agent_code):
+        # In a real-world scenario, this would add actual LLM integration code
+        llm_integrated_code = agent_code.replace(
+            "class AIAgent:",
+            """import openai
+
+class AIAgent:
+    def __init__(self, api_key):
+        self.model = self._build_model()
+        self.client = openai.OpenAI(
+            api_key=api_key,
+            base_url="https://api.aimlapi.com"
+        )
+
+    def llm_query(self, prompt, system_content="You are a helpful AI assistant."):
+        chat_completion = self.client.chat.completions.create(
+            model="mistralai/Mistral-7B-Instruct-v0.2",
+            messages=[
+                {"role": "system", "content": system_content},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.7,
+            max_tokens=128,
+        )
+        return chat_completion.choices[0].message.content
+"""
+        )
+        self.logger.info("LLM integration added to agent code")
+        return llm_integrated_code
+
+
+
+
+
+# utils/exceptions.py
+class DesignGenerationError(Exception):
+    pass
+
+class CodeGenerationError(Exception):
+    pass
+
+class TestingError(Exception):
+    pass
+
+class SafetyCheckError(Exception):
+    pass
+
+# utils/logging_config.py
+import logging
+
+def setup_logging():
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler("ai_agent_creator.log"),
+            logging.StreamHandler()
+        ]
+    )
+
+
+
+
+# Define the LLMAgentDesigner class here or in a separate file
+class LLMAgentDesigner:
+    def __init__(self, llm_connector):
+        self.llm_connector = llm_connector
+
+    async def design_agent(self, requirements):
+        # Implement agent design logic here
+        prompt = f"Design an AI agent based on these requirements: {requirements}"
+        design = await self.llm_connector.connect([{"role": "user", "content": prompt}])
+        return design
+
+    async def develop_agent(self, design):
+        # Implement agent development logic here
+        prompt = f"Develop an AI agent based on this design: {design}"
+        agent_code = await self.llm_connector.connect([{"role": "user", "content": prompt}])
+        return agent_code
+
+# ... (rest of your code)
+
+    async def test_agent(self, agent_code, test_cases):
+            # Implement agent testing logic here
+            prompt = f"Test this AI agent code: {agent_code}\nUsing these test cases: {test_cases}"
+            test_results = await self.llm_connector.connect([{"role": "user", "content": prompt}])
+            return test_results
+
+    async def deploy_agent(self, agent_code, deployment_environment):
+            # Implement agent deployment logic here
+            prompt = f"Deploy this AI agent code: {agent_code}\nTo this environment: {deployment_environment}"
+            deployment_status = await self.llm_connector.connect([{"role": "user", "content": prompt}])
+            return deployment_status
+
+
+
+
+
+
+# ... (rest of the modules remain the same)
+
+# Usage example
+if __name__ == "__main__":
+    api_key = os.getenv("AI_ML_API_KEY")
+    creator = AIAgentCreator(api_key)
+    task = "Create a customer service chatbot that can handle basic inquiries and route complex issues to human agents."
+    try:
+        agent_code, explanation = creator.create_agent(task)
+        print("Agent Code:")
+        print(agent_code)
+        print("\nExplanation:")
+        print(explanation)
+    except Exception as e:
+        print(f"Error: {str(e)}")
