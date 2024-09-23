@@ -1,0 +1,35 @@
+# main.py
+
+from llm_agent import LLM_Agent
+from memory_management import init_db, update_memory, retrieve_user_preferences, store_user_preferences
+from security import encrypt_data, decrypt_data
+from analytics import log_interaction
+from tools import weather_api, serp_api
+
+# Initialize database
+init_db()
+
+# Create an AI agent instance
+agent = LLM_Agent(name="TravelAgent", api_key="your_api_key_here")
+
+# Set agent attributes
+agent.set_attributes(
+    back_story="You are a helpful and descriptive agent.",
+    character="Helpful and friendly.",
+    tools={"weather_api": weather_api, 
+           "serp_api": serp_api
+           },
+    communication_agents={}
+)
+
+# Simulate a user query
+user_query = "Tell me about the weather in New York."
+
+# Execute the task and get the response
+response = agent.execute_task(user_query, user_id="user123")
+
+# Log the interaction
+log_interaction(user_id="user123", query=user_query, response=response, timestamp="2024-07-31 12:00:00")
+
+# Print the response
+print(response)

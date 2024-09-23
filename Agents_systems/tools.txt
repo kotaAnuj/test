@@ -1,0 +1,87 @@
+tools.py
+import webbrowser
+import os
+import subprocess
+import requests
+from bs4 import BeautifulSoup
+from serpapi import GoogleSearch
+
+def weather_api(location):
+    return f"The current weather in {location} is sunny."
+
+def serp_api(query):
+    params = {
+        "engine": "google",
+        "q": query,
+        "api_key": "cff1141144fc78b9790b84e240e0cdf7f42b6021b9075698c179dda0abd464ce"
+    }
+    search = GoogleSearch(params)
+    results = search.get_dict()
+    return results["organic_results"]
+    #return f"Here is some information about {query}."
+
+def document_loader(doc_path):
+    if os.path.exists(doc_path):
+        with open(doc_path, 'r') as file:
+            return file.read()
+    else:
+        return "Document not found."
+
+def create_file(file_path, content):
+    with open(file_path, 'w') as file:
+        file.write(content)
+    return f"File {file_path} created."
+
+def create_folder(folder_path):
+    os.makedirs(folder_path, exist_ok=True)
+    return f"Folder {folder_path} created."
+
+def code_executor(code):
+    try:
+        result = subprocess.run(['python', '-c', code], capture_output=True, text=True, check=True)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"Error: {e.stderr}"
+
+def web_crawler(url):
+    try:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        links = [link.get('href') for link in soup.find_all('a') if link.get('href')]
+        return links
+    except Exception as e:
+        return f"Error crawling {url}: {str(e)}"
+
+def web_scraper(url):
+    try:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        text = soup.get_text(separator=' ', strip=True)
+        return text
+    except Exception as e:
+        return f"Error scraping {url}: {str(e)}"
+    
+workflow_id ="1787370"
+def make_api(workflow_id, data):
+    url = f"https://api.make.com/v2/workflows/{workflow_id}/executions"
+    headers = {
+        "Authorization": "Bearer 117535c6-4bd6-4070-ad1c-d9a29e27b0ec",
+        "Content-Type": "application/json"
+    }
+    response = requests.post(url, json=data, headers=headers)
+    
+    if response.status_code == 200:
+              return response.json()
+    else:
+      # Handle error - raise an exception or log the error message
+        raise Exception(f"API request of make.com failed with status code: {response.status_code}")
+
+
+def zapier_webhook(webhook_url, data):
+    response = requests.post(webhook_url, json=data)
+    return response.json()
+
+def open_youtube(self, query):
+        search_url = f"https://www.youtube.com/results?search_query={query}"
+        webbrowser.open(search_url)
+        return f"Opened YouTube with query: {query}"

@@ -1,0 +1,98 @@
+# llm_agent.py
+
+import openai
+import re
+from prompt_template import create_prompt
+from concurrent.futures import ThreadPoolExecutor
+#from memory_management import retrieve_embeddings, store_embedding, get_embedding, update_memory, retrieve_user_preferences, store_user_preferences
+from security import encrypt_data, decrypt_data
+from langdetect import detect
+from datetime import datetime
+from tools import weather_api, serp_api, document_loader, create_file, create_folder, code_executor, web_crawler, web_scraper, make_api, zapier_webhook
+
+class LLM_Agent:
+    def __init__(self, name, api_key):
+        self.name = name
+        self.api_key = api_key
+        self.back_story = ""
+        self.character = ""
+        self.tools = {
+            "weather_api": weather_api,
+            "serp_api": serp_api,
+            "document_loader": document_loader,
+            "create_file": create_file,
+            "create_folder": create_folder,
+            "code_executor": code_executor,
+            "web_crawler": web_crawler,
+            "web_scraper": web_scraper,
+            "make_api": make_api,
+            "zapier_webhook": zapier_webhook
+        }
+        self.communication_agents = {}
+        self.executor = ThreadPoolExecutor(max_workers=10)
+
+    def set_attributes(self, back_story, character, tools, communication_agents):
+        self.back_story = back_story
+        self.character = character
+        self.tools.update(tools)
+        self.communication_agents = communication_agents
+
+    def execute_task(self, query, user_id):
+        try:
+            language = detect(query)
+            #user_preferences = retrieve_user_preferences(user_id)
+            #past_interactions = retrieve_embeddings(query)
+            past_interactions = query
+            memory_context = "\n".join([f"User: {q} \nAgent: {r}" for q, r in past_interactions])
+            prompt = create_prompt(
+                agent_name=self.name,
+                character=self.character,
+                back_story=self.back_story,
+                memory_context=memory_context,
+                user_query=query,
+                additional_instructions=f"Please respond in {language}.",
+                #user_preferences=user_preferences
+            )
+
+            client = openai.OpenAI(api_key=self.api_key, base_url="https://api.aimlapi.com")
+            chat_completion = client.chat.completions.create(
+                model="mistralai/Mistral-7B-Instruct-v0.2",
+                messages=[
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": query},
+                ],
+                temperature=0.7,
+                max_tokens=128,
+            )
+            response = chat_completion.choices[0].message.content
+            response = self.process_response(response)
+            #store_embedding(query, response, embedding)
+            #store_user_preferences(user_id, user_preferences)
+            return response
+        except Exception as e:
+            return f"An error occurred: {str(e)}"
+
+    def process_response(self, response):
+        tasks = []
+        for tool_name, tool_func in self.tools.items():
+            tool_pattern = re.compile(rf"\{{({tool_name})\((.*?)\)\}}")
+            match = tool_pattern.search(response)
+            if match:
+                param = match.group(2)
+                tasks.append((tool_func, param, match.group(0), tool_name))
+
+        for agent_name, agent in self.communication_agents.items():
+            agent_pattern = re.compile(rf"\{{(agent_{agent_name})\((.*?)\)\}}")
+            match = agent_pattern.search(response)
+            if match:
+                subtask = match.group(2)
+                tasks.append((agent.execute_task, subtask, match.group(0), agent_name))
+
+        with self.executor as executor:
+            future_to_task = {executor.submit(func, param): (placeholder, name) for func, param, placeholder, name in tasks}
+            for future in future_to_task:
+                placeholder, name = future_to_task[future]
+                result = future.result()
+                response = response.replace(placeholder, f"{name.capitalize()} Info: {result}")
+
+        return response

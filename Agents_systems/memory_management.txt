@@ -1,0 +1,84 @@
+# memory_management.py
+import openai
+import sqlite3
+from openai.embeddings_utils import get_embedding # type: ignore
+
+# Initialize the database
+def init_db():
+    conn = sqlite3.connect('agent_memory.db')
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS interactions
+                      (id INTEGER PRIMARY KEY, query TEXT, response TEXT, embedding TEXT)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS user_preferences
+                      (user_id TEXT PRIMARY KEY, preferences TEXT)''')
+    conn.commit()
+    conn.close()
+
+def store_embedding(query, response, embedding):
+    conn = sqlite3.connect('agent_memory.db')
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO interactions (query, response, embedding) VALUES (?, ?, ?)",
+                   (query, response, str(embedding)))
+    conn.commit()
+    conn.close()
+
+def retrieve_embeddings(query):
+    conn = sqlite3.connect('agent_memory.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT query, response FROM interactions")
+    past_interactions = cursor.fetchall()
+    conn.close()
+    return past_interactions
+
+#openai embadding model
+#def get_embedding(text):
+#    embedding = openai.Embedding.create(input=[text], model="text-embedding-ada-002")['data'][0]['embedding']
+#    return embedding
+
+#huggingface model
+import torch
+from transformers import AutoTokenizer, AutoModel
+
+def get_embedding(text, model_name="all-MiniLM-L6-v2"):
+  """
+  Calculates the embedding for a given text using a specified model.
+
+  Args:
+    text: The input text.
+    model_name: The name of the pre-trained model (default: "all-MiniLM-L6-v2").
+
+  Returns:
+    A list of floats representing the embedding.
+  """
+
+  device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+  tokenizer = AutoTokenizer.from_pretrained(model_name)
+  model = AutoModel.from_pretrained(model_name).to(device)
+
+  inputs = tokenizer(text, return_tensors="pt").to(device)
+  outputs = model(**inputs)
+  embedding = outputs.pooler_output.squeeze().to("cpu").tolist()
+
+  return embedding
+
+
+
+def update_memory(query, response):
+    embedding = get_embedding(query)
+    store_embedding(query, response, embedding)
+
+def store_user_preferences(user_id, preferences):
+    conn = sqlite3.connect('agent_memory.db')
+    cursor = conn.cursor()
+    cursor.execute("INSERT OR REPLACE INTO user_preferences (user_id, preferences) VALUES (?, ?)", (user_id, str(preferences)))
+    conn.commit()
+    conn.close()
+
+def retrieve_user_preferences(user_id):
+    conn = sqlite3.connect('agent_memory.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT preferences FROM user_preferences WHERE user_id = ?", (user_id,))
+    preferences = cursor.fetchone()
+    conn.close()
+    return preferences[0] if preferences else {}
