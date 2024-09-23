@@ -1,0 +1,48 @@
+INFO:teamIMP:Starting agent creation for task: Analyze the market trends for renewable energy and provide insights., agent type: crew
+INFO:teamIMP:Checking safety for task: Analyze the market trends for renewable energy and provide insights.
+INFO:teamIMP:Iteration 1
+INFO:teamIMP:Generating design for agent type: crew
+INFO:teamIMP:Design for crew agent generated successfully.
+INFO:teamIMP:Code generated successfully for agent type: crew
+INFO:teamIMP:Running tests on the generated agent code
+ERROR:root:Error with Crew Agent: too many values to unpack (expected 2)
+INFO:teamIMP:Starting agent creation for task: Analyze the market trends for renewable energy and provide insights., agent type: solo
+INFO:teamIMP:Checking safety for task: Analyze the market trends for renewable energy and provide insights.
+INFO:teamIMP:Iteration 1
+INFO:teamIMP:Generating design for agent type: solo
+INFO:teamIMP:Design for solo agent generated successfully.
+INFO:teamIMP:Code generated successfully for agent type: solo
+INFO:teamIMP:Running tests on the generated agent code
+ERROR:root:Error with Solo Agent: too many values to unpack (expected 2)
+INFO:teamIMP:Starting agent creation for task: Analyze the market trends for renewable energy and provide insights., agent type: collaborative
+INFO:teamIMP:Checking safety for task: Analyze the market trends for renewable energy and provide insights.
+INFO:teamIMP:Iteration 1
+INFO:teamIMP:Generating design for agent type: collaborative
+INFO:teamIMP:Design for collaborative agent generated successfully.
+INFO:teamIMP:Code generated successfully for agent type: collaborative
+INFO:teamIMP:Running tests on the generated agent code
+ERROR:root:Error with Collaborative Agent: too many values to unpack (expected 2)
+INFO:teamIMP:Starting agent creation for task: Analyze the market trends for renewable energy and provide insights., agent type: crew
+INFO:teamIMP:Checking safety for task: Analyze the market trends for renewable energy and provide insights.
+INFO:teamIMP:Iteration 1
+INFO:teamIMP:Generating design for agent type: crew
+INFO:teamIMP:Design for crew agent generated successfully.
+INFO:teamIMP:Code generated successfully for agent type: crew
+INFO:teamIMP:Running tests on the generated agent code
+INFO:teamIMP:Agent creation successful after 1 iterations
+INFO:teamIMP:Starting agent creation for task: Analyze the market trends for renewable energy and provide insights., agent type: solo
+INFO:teamIMP:Checking safety for task: Analyze the market trends for renewable energy and provide insights.
+INFO:teamIMP:Iteration 1
+INFO:teamIMP:Generating design for agent type: solo
+INFO:teamIMP:Design for solo agent generated successfully.
+INFO:teamIMP:Code generated successfully for agent type: solo
+INFO:teamIMP:Running tests on the generated agent code
+INFO:teamIMP:Agent creation successful after 1 iterations
+INFO:teamIMP:Starting agent creation for task: Analyze the market trends for renewable energy and provide insights., agent type: collaborative
+INFO:teamIMP:Checking safety for task: Analyze the market trends for renewable energy and provide insights.
+INFO:teamIMP:Iteration 1
+INFO:teamIMP:Generating design for agent type: collaborative
+INFO:teamIMP:Design for collaborative agent generated successfully.
+INFO:teamIMP:Code generated successfully for agent type: collaborative
+INFO:teamIMP:Running tests on the generated agent code
+INFO:teamIMP:Agent creation successful after 1 iterations
