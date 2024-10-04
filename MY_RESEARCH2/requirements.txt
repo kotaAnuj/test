@@ -1,0 +1,12 @@
+plotly
+matplotlib
+seaborn
+scikit-learn
+google-generativeai  
+scipy
+streamlit
+pandas
+numpy
+umap-learn
+requests
+dataclasses; python_version<"3.7"
